@@ -86,7 +86,7 @@ app.post("/api/v1/flostudio/superfan/rank", async (req, res) => {
         if (cachedtoken.key != token.key) return res.status(401).json({ code: 401, message: "Token invalid." })
         tokens.set(token.id, false)
         await roblox.getRankInGroup(process.env.GROUP_ID, parseInt(token.id)).then(async rank => {
-            if (rank >= parseInt(process.env.RANK_TO)) return res.status(401).json({ code: 401, message: "User already ranked too rank is too high." })
+            if (rank >= parseInt(process.env.RANK_TO)) return res.status(401).json({ code: 401, message: "User already ranked or current rank is too high." })
             await roblox.setRank(process.env.GROUP_ID, token.id, parseInt(process.env.RANK_TO)).then(newrank => {
                 console.log(`${token.username} ranked to ${newrank.name} (${newrank.rank})`)
                 return res.status(200).json({ code: 200, message: "User has been successfully ranked!", newrank: newrank })
