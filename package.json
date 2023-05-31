@@ -1,0 +1,16 @@
+{
+  "author": {
+    "name": "mopsfl",
+    "url": "https://github.com/mopsfl"
+  },
+  "description": "A Ranking Bot for Flo Studio (Roblox)",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "cache-manager": "^5.2.1",
+    "dotenv": "^16.1.2",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.7.0",
+    "noblox.js": "^4.14.1",
+    "random-key": "^0.3.2"
+  }
+}
