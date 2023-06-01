@@ -35,13 +35,10 @@ app.use(ratelimit({
     legacyHeaders: false,
     message: { code: 429, message: "Too Many Requests" }
 }))
-app.get('/ip', (request, response) => response.send(request.ip))
-app.use((req, res, next) => {
-    if (!req.headers["roblox-id"] && req.headers.host != process.env.DEV) return res.status(401).json({ code: 401, message: "Unauthorized" })
-    next()
-})
+app.get('/ip', (req, res) => res.json({ ip: req.ip }))
 
 app.use("/api", (req, res, next) => {
+    if (!req.headers["roblox-id"] && req.headers.host != process.env.DEV) return res.status(401).json({ code: 401, message: "Unauthorized" })
     if (!req.headers["authorization"] || req.headers["authorization"] != process.env.API_AUTH) return res.status(401).json({ code: 401, message: "Unauthorized" })
     next()
 })
@@ -59,6 +56,7 @@ app.post("/api/v1/flostudio/superfan/newtoken", async (req, res) => {
             if (await tokens.get(id)) return res.status(401).json({ code: 401, message: "A token for this user already exists." })
             const key = randomkey.generateBase30(16)
             const token = `${key}-${Buffer.from(id, "utf-8").toString("base64")}-${Buffer.from(info.username, "utf-8").toString("base64")}`
+
             await tokens.set(id, token)
             console.log(`created new token for ${info.username} > ${token}`)
             return res.status(200).json({ code: 200, token: token })
@@ -77,14 +75,17 @@ app.post("/api/v1/flostudio/superfan/rank", async (req, res) => {
         if (!req.headers["token"]) return res.status(400).json({ code: 400, message: "Bad Request" })
         const infos = req.headers["token"].replace(/^\w+-/, "").split(/\-/), key = req.headers["token"].replace(/\-.*/, "")
         const token = new Object()
+
         token.key = Buffer.from(key).toString("utf-8")
         token.id = Buffer.from(infos[0], "base64").toString("utf-8")
         token.username = Buffer.from(infos[1], "base64").toString("utf-8")
+
         if (!token || !infos || !key || Object.keys(token).length < 3) return res.status(401).json({ code: 401, message: "Token invalid." })
         const cachedtoken = parseToken(await tokens.get(token.id) || null)
         if (!cachedtoken) return res.status(401).json({ code: 401, message: "Token invalid." })
         if (cachedtoken.key != token.key) return res.status(401).json({ code: 401, message: "Token invalid." })
         tokens.set(token.id, false)
+
         await roblox.getRankInGroup(process.env.GROUP_ID, parseInt(token.id)).then(async rank => {
             if (rank >= parseInt(process.env.RANK_TO)) return res.status(401).json({ code: 401, message: "User already ranked or current rank is too high." })
             await roblox.setRank(process.env.GROUP_ID, token.id, parseInt(process.env.RANK_TO)).then(newrank => {
